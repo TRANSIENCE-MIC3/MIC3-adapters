@@ -1,0 +1,59 @@
+model: remind-mfa
+display_name: REMIND-MFA (steel)
+source:
+  repo: pik-piam/remind-mfa
+  branch: transience
+  commit: 5bdc1beb8a46bc1dac6875e6300db2b939bf37d7
+  date: 2026-11-09
+dependencies:
+  - "madrat parameter archive (data_in/parameters) and reference data are not in the repo; includes commercial steel data (model_status sheet)"
+
+run:
+  command: ["uv", "run", "python", "scripts/run_transience_all.py", "steel"]
+  working_directory: .          # config_loader.CONFIG_DIR is Path.cwd()/config
+  config_file: config/<name>.yml (selected with --config)
+  config_keys: [transience.transience_run, transience.transience_scenario, transience.trade_scenario, transience.open_gem_alignment, transience.baseline_pickle_path]
+  regions: "h12; EU region EUR = EU28 = EU27+1 (C6)"
+  note: "run_transience_all.py runs all CE x trade scenarios; the MIC3 baseline needs a single-run invocation"
+
+inputs:
+  - link: B05
+    from: eu-mfa
+    description: EU-MFA steel flows mapped to REMIND-MFA dimensions
+    target_path: data_in/legacy/transience/<scenario>/*.cs4r
+    source_path: data_in/legacy/transience_input/steel/<scenario>/
+    in_repo: false
+    flows: [demand, collected_eol, lost_eol, scrap]
+    mapping_file: data_in/legacy/transience_input/steel/EU_MFA_mapping_steel.csv
+    existing_code:
+      repo: pik-piam/remind-mfa
+      path: scripts/map_EU-MFA_flows.py
+      style: argparse CLI; paths relative to repo root
+  - link: B03
+    from: open-gem
+    description: OPEN-GEM trade ratios (IMPORTS/DEMAND, EXPORTS/DEMAND for manufactured products; IMPORTS/PROD, EXPORTS/PROD for scrap), interpolated to annual values
+    target_path: data_in/legacy/transience/<scenario>/*.cs4r
+    source_path: data_in/legacy/transience_input/ (OPEN-GEM Excel, header row 2; sector_mapping_OPEN_GEM.xlsx)
+    in_repo: false
+    existing_code:
+      repo: pik-piam/remind-mfa
+      path: scripts/map_OPEN-GEM_trade.py
+      config_flag: transience.open_gem_alignment = true
+
+scripts_in_repo:
+  - {path: scripts/map_EU-MFA_flows.py, in_repo: true}
+  - {path: scripts/map_OPEN-GEM_trade.py, in_repo: true}
+  - {path: scripts/run_transience_all.py, in_repo: true}
+
+outputs:
+  - link: B06
+    to: eu-mfa
+    description: EU cross-border trade of steel goods and intermediate products
+    path: "export folder of the run (pickle and csv)"
+    in_repo: false
+    existing_code: "REMIND-MFA -> EU-MFA conversion script (Mathieu); not in this repo"
+
+open_questions:
+  - "Single-run command and config for the MIC3 baseline (rather than run_transience_all.py)"
+  - "Which REMIND-MFA export files does the REMIND-MFA -> EU-MFA conversion read?"
+  - "Can the madrat parameter archive be shared for the platform image, or must REMIND-MFA run at PIK?"

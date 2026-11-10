@@ -1,0 +1,103 @@
+model: forecast-sites
+display_name: FORECAST-Sites
+source:
+  repo: fraunhofer-isi/forecast-sites
+  branch: main
+  commit: 086465639d71b2abab26162b5f4869065d73f857
+  date: 2026-11-09
+platform_image: "MIC3-API integrations/forecast_sites (same commit; sets automatic_output_directory = false, fixed_output_directory = /opt/forecast-sites/output)"
+dependencies:
+  - "None licensed. Public input data covers only the Port of Rotterdam case (resources/input/por); no EU steel dataset is published"
+
+run:
+  command: ["python", "src/main.py"]
+  working_directory: .
+  config_file: src/simulation_options.toml
+  config_keys: [start_year, interim_year, end_year, year_increment, scenario_ids, region_ids, id_product_filter, input_mode, csv_input_directory, database_path, automatic_output_directory, fixed_output_directory]
+  input_location: "csv_input_directory (CSV mode, imported into database_path) or database_path (SQLITE mode)"
+  output_location: "fixed_output_directory (platform) / results/output_<timestamp> (default)"
+  time_steps: "start_year..end_year by year_increment (default 2025..2050 by 5)"
+
+lookup_tables:
+  - {path: resources/input/por/id_energy_carrier.csv, in_repo: true, format: csv, columns: [id, name], note: "1 Electricity, 3 Coal, 4 Natural gas, 7 Biomass, 15 H2, 21 Coke; no lignite carrier"}
+  - {path: resources/input/por/id_region.csv, in_repo: true, format: csv, columns: [id, name], note: "country names with underscores, e.g. Czech_Republic; 18 = Netherlands"}
+  - {path: resources/input/por/id_scenario.csv, in_repo: true, format: csv, columns: [id, name]}
+  - {path: resources/input/por/id_product.csv, in_repo: true, format: csv, columns: [id, name], note: "no steel products in the public case"}
+
+inputs:
+  - link: B10
+    from: open-prom
+    description: Energy carrier purchase prices
+    path: resources/input/<case>/energy_carrier_purchase_price_in_euro_per_gj.csv
+    check_path: resources/input/por/energy_carrier_purchase_price_in_euro_per_gj.csv
+    in_repo: true
+    format: csv
+    columns: [id_scenario, id_region, id_energy_carrier, "2015", "2050"]
+    time: annual columns 2015..2050
+    units: EUR/GJ (base year not stated; C10 proposes EUR2025)
+    method: D7.3 Table 20 (relative change vs base year applied to existing base-year price; hydrogen converted directly)
+    existing_code: none yet
+  - link: B10
+    from: open-prom
+    description: CO2 price (C5, from OPEN-PROM for now)
+    path: resources/input/<case>/co2_cost_in_euro_per_t_co2.csv
+    check_path: resources/input/por/co2_cost_in_euro_per_t_co2.csv
+    in_repo: true
+    format: csv
+    columns: [id_scenario, id_region, "2015", "2050"]
+    units: EUR/t CO2
+    existing_code: none yet
+  - link: B10
+    from: open-prom
+    description: Biomass utilisation limit (carrier 7)
+    path: resources/input/<case>/energy_carrier_availability_in_gj.csv
+    check_path: resources/input/por/energy_carrier_availability_in_gj.csv
+    in_repo: true
+    format: csv
+    columns: [id_scenario, id_region, id_energy_carrier, "2015", "2050"]
+    units: GJ/yr
+    existing_code: none yet
+  - link: B07
+    from: eu-mfa
+    description: Steel production allocated to production units (D7.3 method; target table to be confirmed)
+    path: resources/input/<case>/production_unit_product_mapping_in_t.csv
+    check_path: resources/input/por/production_unit_product_mapping_in_t.csv
+    in_repo: true
+    format: csv
+    columns: [id_product, id_production_unit, minimum_export_start_year_in_t, minimum_export_interim_year_in_t, minimum_export_end_year_in_t]
+    time: three points only (start_year, interim_year, end_year)
+    units: t
+    existing_code: none yet
+  - link: B07
+    from: eu-mfa
+    description: Scrap availability (production and post-consumer; target table to be confirmed)
+    path: resources/input/<case>/product_availability_in_t.csv
+    check_path: resources/input/por/product_availability_in_t.csv
+    in_repo: true
+    format: csv
+    columns: [id_scenario, id_region, id_product, "2015", "2050"]
+    units: t/yr
+    existing_code: none yet
+
+outputs:
+  - link: B12
+    to: lca-transience
+    description: Results database; IAMC tables are also written here and as <table>.xlsx
+    path: <output_directory>/output.sqlite
+    in_repo: false
+    existing_code: {repo: fraunhofer-isi/forecast-sites, path: src/result/iamc_formatter.py, function: save_iamc_table}
+  - link: B12
+    to: lca-transience
+    description: Steel production by route, as read by the LCA converter
+    path: "scenario_data_forecast_steel_production.xlsx (first sheet)"
+    in_repo: false
+    variables: ["BF-BOF|Production", "Secondary EAF|Production", "DRI-NG-EAF|Production", "BF-BOF-CCS|Production", "..."]
+    units: Mt/yr
+    note: "src/result/product_route_share_export.py only defines ammonia and methanol routes; the steel export is not in the public code"
+
+open_questions:
+  - "Publish the EU steel input dataset (or say where the D7.3 steel runs' CSVs live)"
+  - "Which input tables receive EU-MFA production and scrap? production_unit_product_mapping_in_t only holds start/interim/end values"
+  - "Where is the code that writes the steel route production workbook read by LCA?"
+  - "D7.3 Table 20 maps a lignite price, but FORECAST-Sites has no lignite carrier"
+  - "Monetary base year of the EUR/GJ and EUR/t CO2 input tables"
