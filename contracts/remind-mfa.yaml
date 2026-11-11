@@ -13,7 +13,7 @@ run:
   working_directory: .          # config_loader.CONFIG_DIR is Path.cwd()/config
   config_file: config/<name>.yml (selected with --config)
   config_keys: [transience.transience_run, transience.transience_scenario, transience.trade_scenario, transience.open_gem_alignment, transience.baseline_pickle_path]
-  regions: "h12; EU region EUR = EU28 = EU27+1 (C6)"
+  regions: "h12; EU region EUR = EU28 = EU27+1 (as in D7.3)"
   note: "run_transience_all.py runs all CE x trade scenarios; the MIC3 baseline needs a single-run invocation"
 
 inputs:

@@ -44,7 +44,7 @@ inputs:
     description: Hydrogen and electricity production mixes
     path: scenario_data/scenario_data_open_prom.csv
     in_repo: false
-    existing_code: "Notebook 1 currently builds it from scenario_data_open_prom_init.csv; George will share the adapter (C11)"
+    existing_code: "Notebook 1 currently builds it from scenario_data_open_prom_init.csv; an OPEN-PROM -> LCA adapter exists and is to be added to this repository"
 
 files_in_repo:
   - {path: 0_convert_FORECAST_steel_to_IAMC.py, in_repo: true}

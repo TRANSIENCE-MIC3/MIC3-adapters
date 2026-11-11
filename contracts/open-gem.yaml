@@ -16,7 +16,7 @@ run:
   model_file: MODEL/OPEN_GEM.gms
   config_keys: []        # scenario selection mechanism to be documented
 
-inputs: []               # baseline: no inputs from other MIC3 models (assumptions database out of scope, C3)
+inputs: []               # baseline: no inputs from other MIC3 models (scenario assumptions database out of scope for now)
 
 outputs:
   - link: [B02, B03]

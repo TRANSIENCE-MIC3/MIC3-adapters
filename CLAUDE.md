@@ -2,9 +2,9 @@
 
 Adapters and I/O contracts that link the seven TRANSIENCE models into MIC3 (Model for European Industry
 Circularity and Climate Change Mitigation), plus the tools that keep them in step with the model repositories.
-Internal working notes (handoff notes, findings workbook) live in `.internal_docs/`, which is git-ignored.
-If you have that folder, read the handoff notes there first: they record the scope, the decisions taken so
-far and the open questions.
+Internal working notes live in `internal_docs/`, which is git-ignored: `internal_docs/handoff.md` (scope,
+decisions taken so far, open questions) and `internal_docs/MIC3_links_D7.3_vs_Excel_findings.xlsx` (findings).
+If you have that folder, read `internal_docs/handoff.md` first.
 
 ## Layout
 
@@ -14,7 +14,7 @@ far and the open questions.
   `model-repos/` (git-ignored; pinned commits, partial EU-MFA checkout, ~100 MB).
 - `tools/check_contracts.py` – checks that every path and column a contract relies on still exists.
 - `docs/baseline_links_steel.csv` – the 13 baseline links (B01–B13) the contracts refer to.
-- `.internal_docs/` – internal working notes, local only (git-ignored).
+- `internal_docs/` – internal working notes, local only (git-ignored).
 
 ## Rules
 
@@ -32,7 +32,8 @@ far and the open questions.
 - **Flag ambiguities, don't guess.** Surface design decisions before writing code and confirm them one by
   one; verify structural assumptions against the actual files before reporting them.
 - When a contract changes, update the commit pin, rerun the checker, and record any new finding in the
-  local findings workbook. Keep finding IDs (Fxx) out of committed files.
+  local findings workbook. Keep internal IDs (findings Fxx, clarifications Cxx) and personal names out of
+  committed files; describe the decision itself instead.
 
 ## Commands
 
