@@ -49,11 +49,14 @@ outputs:
   - link: B06
     to: eu-mfa
     description: EU cross-border trade of steel goods and intermediate products
-    path: "export folder of the run (pickle and csv)"
+    path: "<run folder>/csv/flows/ (run folder named <timestamp>_steel_SSP2_h12_<scenario>; also model.pickle)"
     in_repo: false
-    existing_code: "REMIND-MFA -> EU-MFA conversion script (Mathieu); not in this repo"
+    files: [good_market__exports.csv, imports__good_market.csv, ip_market__exports.csv, imports__ip_market.csv]
+    columns: "Time, Region, Good, value (goods); Time, Region, value (intermediate products)"
+    units: t
+    regions: "h12; EU-MFA uses region EUR"
+    existing_code: "remindmfa_to_eumfa.R (WI; received, not yet public) converts these into EU-MFA Import/ExportNewGoods/Products.csv"
 
 open_questions:
   - "Single-run command and config for the MIC3 baseline (rather than run_transience_all.py)"
-  - "Which REMIND-MFA export files does the REMIND-MFA -> EU-MFA conversion read?"
   - "Can the madrat parameter archive be shared for the platform image, or must REMIND-MFA run at PIK?"

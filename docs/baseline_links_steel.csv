@@ -1,14 +1,14 @@
 ID,From,To,Variables (per D7.3),D7.3 section,Existing code / location,Script status,Notes
-B01,OPEN-GEM,OPEN-PROM,"GDP|MER, Population, Production|{Sector}, Expenditure|Households",§3.1.1,"mrprom: readOPEN_GEM.R, convertOPEN_GEM.R, calcIACTV_OP_GEM.R",Existing,
-B02,OPEN-GEM,EU-MFA (steel),"DEMAND (IND31, IND33, IND35), GDP (miscellaneous)",§3.1.2,SharePoint folder D7.3/EU-MFA,Existing,
+B01,OPEN-GEM,OPEN-PROM,"GDP|MER, Population, Production|{Sector}, Expenditure|Households",§3.1.1,"mrprom: readOPEN_GEM.R, convertOPEN_GEM.R, calcIACTV_OP_GEM.R, fullOPEN-PROM.R (iActvOPGEM.csvr block)",Existing,
+B02,OPEN-GEM,EU-MFA (steel),"DEMAND (IND31, IND33, IND35), GDP (miscellaneous)",§3.1.2,opengem_to_eumfa.R + config.yml (WI; not yet public),Existing,Writes growth_rate.csv and FinalDemand.csv; OPEN-GEM report exported to CSV by hand; runs in RStudio only
 B03,OPEN-GEM,REMIND-MFA (steel),"DEMAND, IMPORTS, EXPORTS (IND33, IND35, IND17+18, IND19)",§3.1.3,pik-piam/remind-mfa (transience) scripts/map_OPEN-GEM_trade.py,Existing,
-B04,OPEN-PROM,EU-MFA (vehicles),Capacity Additions|Passenger Cars|{Technology},§3.1.5,Unknown,Existing (location unknown),
+B04,OPEN-PROM,EU-MFA (vehicles),Capacity Additions|Passenger Cars|{Technology},§3.1.5,Not received,Existing (script not received),Source: OPEN-PROM PassengerCars sheet (million vehicles)
 B05,EU-MFA,REMIND-MFA (steel),"Demand, stock outflow, collected / sorted EoL (EU27+1)",§3.1.7,pik-piam/remind-mfa (transience branch) scripts/map_EU-MFA_flows.py,Existing,
-B06,REMIND-MFA,EU-MFA (steel),"Manufactured products imports/exports, material imports/exports",§3.1.7,Conversion script (Mathieu); SharePoint folder D7.3/EU-MFA,Existing (location unknown),
-B07,EU-MFA,FORECAST-Sites,"Steel product demand, production scrap, post-consumer scrap","§3.1.8, Table 16",None yet,No script yet,
+B06,REMIND-MFA,EU-MFA (steel),"Manufactured products imports/exports, material imports/exports",§3.1.7,remindmfa_to_eumfa.R + config.yml (WI; not yet public),Existing,Reads REMIND-MFA csv/flows goods and intermediate-product trade; t -> kt
+B07,EU-MFA,FORECAST-Sites,Growth of steel product market and available scrap (relative to 2025),"§3.1.8, Table 16","upstream/forecast-sites/couple_eumfa_production_targets.py (Fraunhofer, AGPL-3.0)",Existing,Needs World Steel 2023/2025 statistics and couple_remind_production_targets.py (not received); writes 2025/2040/2050 mandates per production unit
 B08,EU-MFA,ITOM (steel),New steel products → Demand; new scrap → scrap_0; available scrap → scrap_1…5,§3.1.8,wupperinst/TRANSIENCE_MIC3-ITOM_Interface (+ itom-postprocessing),Existing,
-B09,OPEN-PROM,ITOM (steel),Price|Final Energy|Industry|Iron and Steel|{EF}; FE biomass & waste; Price|Carbon,"§3.1.10, Table 19",wupperinst/TRANSIENCE_MIC3-ITOM_Interface (energy + ETS modules),Existing,Import step converts OPEN-PROM $2015 values to EUR2025
-B10,OPEN-PROM,FORECAST-Sites,Price|Final Energy|Industry|Iron and Steel|{EF}; FE biomass & waste; Price|Carbon,"§3.1.10, Table 20",None yet,No script yet,Import step converts OPEN-PROM $2015 values to EUR2025
+B09,OPEN-PROM,ITOM (steel),Price|Final Energy|Industry|Iron and Steel|{EF}; FE biomass & waste; Price|Carbon,"§3.1.10, Table 19",wupperinst/TRANSIENCE_MIC3-ITOM_Interface (energy + ETS modules),Existing,Prices applied as change vs 2020 and carbon price as change vs 2025 (currency cancels); hydrogen converted directly to EUR2015/GJ
+B10,OPEN-PROM,FORECAST-Sites,Price|Final Energy|Industry|Iron and Steel|{EF}; FE biomass & waste; Price|Carbon,"§3.1.10, Table 20","upstream/forecast-sites/couple_openprom_prices.py (Fraunhofer, AGPL-3.0)",Existing (steel settings not received),Converts k$2015/toe directly to EUR2015/GJ; carbon price not covered
 B11,OPEN-PROM,LCA-TRANSIENCE,Hydrogen and electricity production mixes,§3.1.11,"Adapter exists, to be shared (cf. lca_transience config_open_prom.yaml)",Existing (to be shared),
-B12,FORECAST-Sites,LCA-TRANSIENCE,Production|Steel|{route},"§3.1.11, Table 22",tomterlouw/lca_transience configuration_file/config_forecast.yaml,Existing,
+B12,FORECAST-Sites,LCA-TRANSIENCE,Production|Steel|{route},"§3.1.11, Table 22",tomterlouw/lca_transience configuration_file/config_forecast.yaml,Existing,Source file: FORECAST-Sites steel_production.xlsx (export code not public); FORECAST-Sites counts Scope 1 only
 B13,ITOM,LCA-TRANSIENCE,Production|Steel|{route},"§3.1.11, Table 23",tomterlouw/lca_transience configuration_file/config_itom.yaml,Existing,

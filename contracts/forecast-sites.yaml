@@ -7,77 +7,89 @@ source:
   date: 2026-11-09
 platform_image: "MIC3-API integrations/forecast_sites (same commit; sets automatic_output_directory = false, fixed_output_directory = /opt/forecast-sites/output)"
 dependencies:
-  - "None licensed. Public input data covers only the Port of Rotterdam case (resources/input/por); no EU steel dataset is published"
+  - "No licensed software. The EU steel input dataset (transience_steel) is not in the public repository; the public repo ships only the Port of Rotterdam case (resources/input/por)"
+  - "World Steel Association production statistics by country and route (2023, 2025) for the EU-MFA coupling; not in the repository, licence to confirm"
 
 run:
   command: ["python", "src/main.py"]
   working_directory: .
   config_file: src/simulation_options.toml
-  config_keys: [start_year, interim_year, end_year, year_increment, scenario_ids, region_ids, id_product_filter, input_mode, csv_input_directory, database_path, automatic_output_directory, fixed_output_directory]
+  config_keys: [start_year, interim_year, end_year, year_increment, id_scenario, region_ids, id_product_filter, input_mode, csv_input_directory, database_path, optimization_type, automatic_output_directory, fixed_output_directory]
   input_location: "csv_input_directory (CSV mode, imported into database_path) or database_path (SQLITE mode)"
-  output_location: "fixed_output_directory (platform) / results/output_<timestamp> (default)"
-  time_steps: "start_year..end_year by year_increment (default 2025..2050 by 5)"
+  output_location: "fixed_output_directory (platform) / rolling or automatic output directory (default)"
+  baseline_settings: "steel dataset transience_steel; scenarios 1 and 2 ('Transience Steel 1/2'); 2025-2050 by 5 years, interim year 2040; optimization_type REGION_MULTI_PERIOD; 24 regions"
+
+system_boundaries:
+  scope: "Direct (Scope 1) plant emissions only"
+  bf_bof: "Sinter plant, coke oven plant and blast furnace (per t hot metal) plus converter (per t liquid steel); surplus top and coke-oven gas burned on site, its energy leaves the system boundary"
+  dri_eaf: "Direct reduction on natural gas (optional hydrogen variant) per t DRI, plus EAF on electricity (minor CO2 from electrodes and charged carbon)"
+  upstream: "Purchased products (ore, pellets, scrap) and energy carriers enter without upstream energy or emissions"
+  excluded: "Rolling mills and minor by-products such as slag"
 
 lookup_tables:
-  - {path: resources/input/por/id_energy_carrier.csv, in_repo: true, format: csv, columns: [id, name], note: "1 Electricity, 3 Coal, 4 Natural gas, 7 Biomass, 15 H2, 21 Coke; no lignite carrier"}
-  - {path: resources/input/por/id_region.csv, in_repo: true, format: csv, columns: [id, name], note: "country names with underscores, e.g. Czech_Republic; 18 = Netherlands"}
+  - {path: resources/input/por/id_energy_carrier.csv, in_repo: true, format: csv, columns: [id, name], note: "carrier ids are dataset-specific: in transience_steel 1 Electricity, 3 Hard coal, 4 Coke, 5 Lignite, 6 Natural Gas, 12 Biomass solid; in por 4 Natural gas, 7 Biomass, 15 H2"}
+  - {path: resources/input/por/id_region.csv, in_repo: true, format: csv, columns: [id, name], note: "country names; ISO3 -> id mapping in upstream/forecast-sites/openprom.py (EU27+UK)"}
   - {path: resources/input/por/id_scenario.csv, in_repo: true, format: csv, columns: [id, name]}
-  - {path: resources/input/por/id_product.csv, in_repo: true, format: csv, columns: [id, name], note: "no steel products in the public case"}
+  - {path: resources/input/por/id_product.csv, in_repo: true, format: csv, columns: [id, name], note: "steel dataset (version 1.2 onwards): 121 raw steel hot (primary, BOF), 122 scrap, 123 raw steel hot secondary (EAF); in versions 1 and 1.1, 122 was secondary steel and 123 did not exist"}
 
 inputs:
+  - link: B07
+    from: eu-mfa
+    description: "Steel production mandates per production unit. Country and route split from World Steel 2023/2025 (BOF = primary, product 121; EAF = secondary, product 123); after 2025 the 2025 country values are scaled with the growth of EU-MFA sysenv__steel_product_market (total) and waste_management__available_scrap_sysenv (secondary), primary = remainder, country shares fixed at 2025; distributed over production units by installed capacity, excess over capacity built by the model"
+    path: resources/input/<case>/production_unit_product_mapping_in_t.csv
+    check_path: resources/input/por/production_unit_product_mapping_in_t.csv
+    in_repo: true
+    format: csv
+    columns: [id_product, id_production_unit, minimum_export_start_year_in_t, minimum_export_interim_year_in_t, minimum_export_end_year_in_t]
+    time: "three points: start, interim, end year (2025, 2040, 2050)"
+    units: t
+    source_files: [sysenv__steel_product_market.csv, waste_management__available_scrap_sysenv.csv]
+    source_units: "kt, region EU27+1, element All; only growth rates relative to 2025 are used"
+    existing_code:
+      repo: TRANSIENCE-MIC3/MIC3-adapters
+      path: upstream/forecast-sites/couple_eumfa_production_targets.py
+      reader: upstream/forecast-sites/eumfa.py
+      entry: "couple(EumfaCouplingConfig(target_dir, year_periods, tag))"
+      missing_dependency: "couple_remind_production_targets.py (provides _capacity_weights)"
+      also_writes: "steel_country_route_mapping.csv and coupling_validation_<tag>.csv in the statistics folder"
   - link: B10
     from: open-prom
-    description: Energy carrier purchase prices
+    description: "Energy carrier purchase prices from Price|Final Energy|Industry|<sector>|<carrier>, converted directly from k$2015/toe to EUR2015/GJ (1 EUR = 1.1095 USD; 41.868 GJ/toe). The target scenario is first seeded from a base scenario across all scenario tables"
     path: resources/input/<case>/energy_carrier_purchase_price_in_euro_per_gj.csv
     check_path: resources/input/por/energy_carrier_purchase_price_in_euro_per_gj.csv
     in_repo: true
     format: csv
     columns: [id_scenario, id_region, id_energy_carrier, "2015", "2050"]
-    time: annual columns 2015..2050
-    units: EUR/GJ (base year not stated; C10 proposes EUR2025)
-    method: D7.3 Table 20 (relative change vs base year applied to existing base-year price; hydrogen converted directly)
-    existing_code: none yet
+    time: annual columns 2015..2050 (coupling writes 2025..2050 by 5 years)
+    units: EUR/GJ
+    existing_code:
+      repo: TRANSIENCE-MIC3/MIC3-adapters
+      path: upstream/forecast-sites/couple_openprom_prices.py
+      reader: upstream/forecast-sites/openprom.py
+      entry: "apply_openprom_prices(OpenPromPriceCouplingConfig(...))"
+      note: "default invocation is ammonia/methanol (sector Chemicals); steel settings not yet received"
   - link: B10
     from: open-prom
-    description: CO2 price (C5, from OPEN-PROM for now)
-    path: resources/input/<case>/co2_cost_in_euro_per_t_co2.csv
-    check_path: resources/input/por/co2_cost_in_euro_per_t_co2.csv
-    in_repo: true
-    format: csv
-    columns: [id_scenario, id_region, "2015", "2050"]
-    units: EUR/t CO2
-    existing_code: none yet
-  - link: B10
-    from: open-prom
-    description: Biomass utilisation limit (carrier 7)
+    description: "Biomass availability from Final Energy|Industry|<sector>|Biomass and Waste (Mtoe -> GJ); OPEN-PROM use, treated as a reference rather than a hard cap"
     path: resources/input/<case>/energy_carrier_availability_in_gj.csv
     check_path: resources/input/por/energy_carrier_availability_in_gj.csv
     in_repo: true
     format: csv
     columns: [id_scenario, id_region, id_energy_carrier, "2015", "2050"]
     units: GJ/yr
-    existing_code: none yet
-  - link: B07
-    from: eu-mfa
-    description: Steel production allocated to production units (D7.3 method; target table to be confirmed)
-    path: resources/input/<case>/production_unit_product_mapping_in_t.csv
-    check_path: resources/input/por/production_unit_product_mapping_in_t.csv
+    existing_code:
+      repo: TRANSIENCE-MIC3/MIC3-adapters
+      path: upstream/forecast-sites/couple_openprom_prices.py
+  - link: B10
+    from: open-prom
+    description: CO2 price (from OPEN-PROM for now)
+    path: resources/input/<case>/co2_cost_in_euro_per_t_co2.csv
+    check_path: resources/input/por/co2_cost_in_euro_per_t_co2.csv
     in_repo: true
     format: csv
-    columns: [id_product, id_production_unit, minimum_export_start_year_in_t, minimum_export_interim_year_in_t, minimum_export_end_year_in_t]
-    time: three points only (start_year, interim_year, end_year)
-    units: t
-    existing_code: none yet
-  - link: B07
-    from: eu-mfa
-    description: Scrap availability (production and post-consumer; target table to be confirmed)
-    path: resources/input/<case>/product_availability_in_t.csv
-    check_path: resources/input/por/product_availability_in_t.csv
-    in_repo: true
-    format: csv
-    columns: [id_scenario, id_region, id_product, "2015", "2050"]
-    units: t/yr
-    existing_code: none yet
+    columns: [id_scenario, id_region, "2015", "2050"]
+    units: EUR/t CO2
+    existing_code: "not in the received coupling scripts"
 
 outputs:
   - link: B12
@@ -88,16 +100,21 @@ outputs:
     existing_code: {repo: fraunhofer-isi/forecast-sites, path: src/result/iamc_formatter.py, function: save_iamc_table}
   - link: B12
     to: lca-transience
-    description: Steel production by route, as read by the LCA converter
-    path: "scenario_data_forecast_steel_production.xlsx (first sheet)"
+    description: Steel production by route and country, read by the LCA converter
+    path: <output_directory>/steel_production.xlsx
     in_repo: false
-    variables: ["BF-BOF|Production", "Secondary EAF|Production", "DRI-NG-EAF|Production", "BF-BOF-CCS|Production", "..."]
-    units: Mt/yr
-    note: "src/result/product_route_share_export.py only defines ammonia and methanol routes; the steel export is not in the public code"
+    format: xlsx, one sheet
+    columns: [model, scenario, region, variable, unit, "2025", "2030", "2035", "2040", "2045", "2050"]
+    dimensions: {model: [FORECAST], scenario: [1, 2], region: "ISO-2 country codes (AT, BE, ...)"}
+    variables: ["BF-BOF|Production", "Secondary EAF|Production", "..."]
+    units: Mt/year
+    note: "Also written: steel_final_energy.xlsx, steel_investments.xlsx, steel_production_cost.xlsx. The code that writes these files is not in the public repository"
 
 open_questions:
-  - "Publish the EU steel input dataset (or say where the D7.3 steel runs' CSVs live)"
-  - "Which input tables receive EU-MFA production and scrap? production_unit_product_mapping_in_t only holds start/interim/end values"
-  - "Where is the code that writes the steel route production workbook read by LCA?"
-  - "D7.3 Table 20 maps a lignite price, but FORECAST-Sites has no lignite carrier"
-  - "Monetary base year of the EUR/GJ and EUR/t CO2 input tables"
+  - "Publish the steel coupling scripts (input/transience_coupling) and the EU steel dataset in the public repository; until then the scripts are kept in upstream/forecast-sites"
+  - "Provide couple_remind_production_targets.py and the World Steel statistics file (with licence)"
+  - "Norway, Switzerland, Latvia: keep existing mandates (modellers' description) or capacity x average utilisation of the other countries (script, D7.3)?"
+  - "Steel settings for couple_openprom_prices.py (sector, carrier ids, regions, scenario) and the carbon-price coupling"
+  - "Price method: direct conversion to EUR2015 (script) or relative change vs base year (D7.3 Table 20); target currency year"
+  - "Code that writes steel_production.xlsx and the other steel_*.xlsx exports"
+  - "Source and licence of the plant-level data (companies, sites, coordinates)"

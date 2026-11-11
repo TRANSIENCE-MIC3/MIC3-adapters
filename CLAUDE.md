@@ -2,9 +2,9 @@
 
 Adapters and I/O contracts that link the seven TRANSIENCE models into MIC3 (Model for European Industry
 Circularity and Climate Change Mitigation), plus the tools that keep them in step with the model repositories.
-Internal working notes live in `internal_docs/`, which is git-ignored: `internal_docs/handoff.md` (scope,
+Internal working notes live in `internal_docs/`, which is git-ignored: `internal_docs/status.md` (scope,
 decisions taken so far, open questions) and `internal_docs/MIC3_links_D7.3_vs_Excel_findings.xlsx` (findings).
-If you have that folder, read `internal_docs/handoff.md` first.
+If you have that folder, read `internal_docs/status.md` first; it is the running record of decisions and open items, so update it whenever something is settled.
 
 ## Layout
 
@@ -14,6 +14,8 @@ If you have that folder, read `internal_docs/handoff.md` first.
   `model-repos/` (git-ignored; pinned commits, partial EU-MFA checkout, ~100 MB).
 - `tools/check_contracts.py` – checks that every path and column a contract relies on still exists.
 - `docs/baseline_links_steel.csv` – the 13 baseline links (B01–B13) the contracts refer to.
+- `upstream/<model>/` – verbatim copies of team linking scripts not yet published in the team's own repo
+  (with `PROVENANCE.md`); removed once the team publishes them.
 - `internal_docs/` – internal working notes, local only (git-ignored).
 
 ## Rules
@@ -26,7 +28,7 @@ If you have that folder, read `internal_docs/handoff.md` first.
   `remind-mfa/scripts/map_*.py`, LCA `0_convert_*` converters). Where a script hardcodes paths, stage files
   into a temporary copy of its folder rather than editing it.
 - **Branches:** read `main`/`master` of every repo, except `pik-piam/remind-mfa`, which uses `transience`.
-- **Scope (until changed in the handoff notes):** baseline only (no loops); iron & steel only for
+- **Scope (until changed in `internal_docs/status.md`):** baseline only (no loops); iron & steel only for
   multi-sector models; scenario assumptions database out of scope; carbon price from OPEN-PROM;
   REMIND-MFA regions per D7.3 (EU = EU27+1); FORECAST-Sites gets production from EU-MFA.
 - **Flag ambiguities, don't guess.** Surface design decisions before writing code and confirm them one by
