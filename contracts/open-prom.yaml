@@ -1,0 +1,63 @@
+model: open-prom
+display_name: OPEN-PROM
+source:
+  repo: e3modelling/OPEN-PROM
+  branch: main
+  commit: ab006244a693fc4289f3479bfc0c9aa126d3de91
+  date: 2026-10-12
+related_repos:
+  - {repo: e3modelling/mrprom, branch: main, commit: 9092a474cfe42692aaf41d3e6b26e74ccdedf539, role: "input generation (madrat), incl. OPEN-GEM -> OPEN-PROM"}
+  - {repo: e3modelling/postprom, branch: main, commit: b585e1c1efed13d9b9d6da8d25bd125a8e86d7e4, role: "reporting GDX -> IAMC .mif / xlsx"}
+dependencies:
+  - "GAMS (licence acquired by HOL), R with mrprom/postprom"
+  - "Internal madrat source data for real-data runs; the public path uses dummy data (DevMode=2)"
+
+run:
+  command: ["Rscript", "start.R", "task_id=<n>"]
+  working_directory: .
+  config_file: config.json (from config.template.json)
+  config_keys: [task_id, scenario_name, gams_flags.fScenario, gams_flags.fEndY]
+  gams_flag_for_link: "OPENGEM=on (main.gms) makes core/input.gms read iActvOPGEM.csvr instead of iActv.csvr"
+  output_location: "run folder with blabla.gdx; reportOutput writes the .mif"
+
+inputs:
+  - link: B01
+    from: open-gem
+    description: Sector activity imActv(YTIME, allCy, DSBS), billion US$2015 for main sectors
+    path: iActvOPGEM.csvr (generated input)
+    in_repo: false
+    existing_code:
+      repo: e3modelling/mrprom
+      chain: [R/readOPEN_GEM.R, R/convertOPEN_GEM.R, R/calcIACTV_OP_GEM.R]
+      note: "Excel link_status: 'full OPEN-PROM (lines 92-103 only)'"
+
+files_in_repo:
+  - {path: main.gms, in_repo: true}
+  - {path: core/input.gms, in_repo: true}
+  - {path: start.R, in_repo: true}
+  - {path: config.template.json, in_repo: true}
+
+outputs:
+  - link: [B04, B09, B10, B11]
+    to: [eu-mfa, itom, forecast-sites, lca-transience]
+    description: IAMC report (.mif) written by postprom::convertGDXtoMIF
+    path: <run folder>/*.mif
+    in_repo: false
+    variables:
+      - "Price|Final Energy|Industry|Iron and Steel|<carrier>  (k$2015/toe per the ITOM config)"
+      - "Price|Carbon"
+      - "Final Energy|Industry|Iron and Steel|Biomass and Waste  (Mtoe)"
+      - "Capacity Additions|Passenger Cars|<technology>"
+    regions: ISO-3 country codes
+    existing_code: {repo: e3modelling/postprom, paths: [R/convertGDXtoMIF.R, R/reportPrice.R, R/reportPriceCarbon.R, R/reportVehicles.R]}
+  - link: B09
+    to: itom
+    description: Derived workbooks the ITOM interface reads
+    files: ["OPEN-PROM-Baseline-<date>.xlsx (PricesIndustry, FinalEnergyBiomass)", "CarbonPrices.xlsx (CarbonPrices, Region EU)"]
+    in_repo: false
+    note: Not produced by postprom; origin to confirm
+
+open_questions:
+  - "Which task_id and flags define the MIC3 baseline (with OPENGEM=on)?"
+  - "Who produces PricesIndustry/FinalEnergyBiomass and CarbonPrices.xlsx, and should the ITOM adapter read the .mif instead?"
+  - "Can real-data input generation run in a container, or is a pre-generated input folder shipped?"

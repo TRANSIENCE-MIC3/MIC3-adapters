@@ -1,0 +1,125 @@
+model: itom
+display_name: ITOM (steel)
+source:
+  repo: wupperinst/itom
+  branch: main
+  commit: 40f08ba52a2189f2fa62bd9f252090e1acbb9564
+  date: 2026-01-13
+related_repos:
+  - {repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface, branch: master, commit: 94c2ff7693f44463c0b49dfdf611b9a9774ec454, role: "MFA/OPEN-PROM/carbon price -> ITOM input workbook"}
+  - {repo: wupperinst/itom-postprocessing, branch: main, commit: 528a0c01e7db6c76b11c3719bfc50e88e09dcf3d, role: "ITOM output CSVs -> IAMC workbook"}
+dependencies:
+  - "Solver: configs/default_config.yaml uses gurobi (commercial licence); glpk is the open alternative"
+  - "Input workbook ITOM_Steel_TRANSIENCE_baseline0_input.xlsx is not in any public repo"
+  - "Postprocessing needs Model_data/ITOM-Steel_region-grouping.xlsx, not in the repo"
+
+run:
+  command: ["python", "run.py", "-s", "<model_run_code>"]
+  working_directory: src            # run.py resolves the repo root from cwd ending in itom or itom/src
+  config_file: configs/<model_run_code>_config.yaml   # falls back to configs/default_config.yaml
+  config_keys: [model_run_code, solver.name, processes.retrofit, transport.hub, output.post_process]
+  input_location: input/<model_run_code>/<model_run_code>_input.xlsx
+  output_location: output/<model_run_code>/
+  time_steps: [2020, 2025, 2030, 2035, 2040, 2045, 2050]
+
+inputs:
+  - link: B08
+    from: eu-mfa
+    description: Final steel demand by ITOM demand product
+    path: input/<model_run_code>/<model_run_code>_input.xlsx
+    in_repo: false
+    format: xlsx-sheet
+    sheet: Demand
+    columns: [REGION, PRODUCT, YEAR, SpecifiedAnnualDemand]
+    dimensions: {REGION: [Europe_Demand], PRODUCT: "Final_<Product_EST> from mfa_itom_steel_product_mapping.xlsx"}
+    units: Mt per 5-year period (mean of 5-year window x 5)
+    write_mode: replace all data rows
+    existing_code:
+      repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface
+      path: ITOM_demand_interface/demand_and_scrap_availability_itom_steel.py
+      then: ITOM_demand_interface/update_itom_steel_input.py
+      style: module-level scripts with paths fixed relative to the script folder
+  - link: B08
+    from: eu-mfa
+    description: Scrap availability by copper-contamination class (import_scrap_0 ... import_scrap_04)
+    path: input/<model_run_code>/<model_run_code>_input.xlsx
+    in_repo: false
+    format: xlsx-sheet
+    sheet: Total...AnnualActivityUpLimit
+    columns: [REGION, TECHNOLOGY, YEAR, TotalTechnologyAnnualActivityUpperLimit]
+    dimensions: {REGION: [energy_center], TECHNOLOGY: [import_scrap_0, import_scrap_01, import_scrap_02, import_scrap_03, import_scrap_04]}
+    units: Mt per 5-year period
+    write_mode: replace rows whose TECHNOLOGY starts with import_scrap, keep all others
+    existing_code:
+      repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface
+      path: ITOM_demand_interface/update_itom_steel_input.py
+  - link: B09
+    from: open-prom
+    description: Energy prices as indices relative to 2020 (natural gas, electricity on pipeline routes; coal, biomass on import technologies); hydrogen converted directly
+    path: input/<model_run_code>/<model_run_code>_input.xlsx
+    in_repo: false
+    format: xlsx-sheet
+    sheets: [TransportRoute_pipeline, TransportCostByMode, TRANSPORTMODE, TransportCapacity_pipeline, TransportCapacityToActivity, VariableCost]
+    units: "EUR/GJ (hydrogen: k$2015/toe x 21.52, i.e. EUR2015 at 0.901 EUR/USD); others relative to 2020"
+    existing_code:
+      repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface
+      path: ITOM_energy_interface/data_update_open_prom_to_itom_steel.py
+      config: ITOM_energy_interface/config_itom_steel.yaml
+      functions: [update_itom_steel_energy_prices.compute_open_prom_price_indices, update_itom_steel_energy_prices.run_energy_prices_update]
+  - link: B09
+    from: open-prom
+    description: Biomass upper limit for import_biomass
+    path: input/<model_run_code>/<model_run_code>_input.xlsx
+    in_repo: false
+    format: xlsx-sheet
+    sheet: Total...AnnualActivityUpLimit
+    dimensions: {REGION: [energy_center], TECHNOLOGY: [import_biomass]}
+    units: PJ per 5-year period (OPEN-PROM Mtoe x 41.868, summed over EU27+UK and 5 years)
+    existing_code:
+      repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface
+      path: ITOM_energy_interface/update_itom_steel_biomass_limit.py
+      functions: [extract_and_aggregate_biomass_pj, run_biomass_limit_update]
+  - link: B09
+    from: open-prom
+    description: CO2 emissions penalty, scaled from the existing 2025 value by the change in the EU carbon price (currency cancels out)
+    path: input/<model_run_code>/<model_run_code>_input.xlsx
+    in_repo: false
+    format: xlsx-sheet
+    sheet: EmissionsPenalty
+    existing_code:
+      repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface
+      path: ITOM_ets_interface/TRANSIENCE_ITOM_ets_interface.py
+      functions: [update_emissions_penalty]
+
+source_files_expected_by_existing_code:
+  - {link: B08, file: FinalDemand.csv, columns: [region, time, sector, product, element, value], region: EU27+1, units: kt, filter: "element == All"}
+  - {link: B08, file: waste_management__available_scrap_sysenv.csv, columns: [region, time, waste_category, element, value], elements: [All, Cu], units: kt}
+  - {link: B08, file: steel_goods_manufacturing__sysenv.csv, columns: [region, time, element, value], units: kt}
+  - {link: B08, file: mfa_itom_steel_product_mapping.xlsx, sheet: products_mfa_itom, columns: [sectors, products, Product_EST], in_repo: true, repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface, path: ITOM_demand_interface/mfa_itom_steel_product_mapping.xlsx}
+  - {link: B09, file: "OPEN-PROM-Baseline-<date>.xlsx", sheets: {PricesIndustry: "IAMC wide, Region ISO-3, Price|Final Energy|Industry|Iron and Steel|<carrier>, k$2015/toe", FinalEnergyBiomass: "Final Energy|Industry|Iron and Steel|Biomass and Waste, Mtoe"}}
+  - {link: B09, file: CarbonPrices.xlsx, sheet: CarbonPrices, filter: "Region == EU", years_required: [2025]}
+
+outputs:
+  - link: B13
+    to: lca-transience
+    description: Native long-format result CSVs, one per model variable
+    path: output/<model_run_code>/<model_run_code>_<Variable>.csv
+    in_repo: false
+    variables_used_by_postprocessing: [LocalProduction, LocalProductionByTechnology, LocalProductionByMode, LocalUse, LocalUseByTechnology, LocalCapitalInvestment, LocalTotalCapacity, LocalTechnologyEmission, NewCapacity, TotalCapacity, Use, TotalDiscountedCost, shadow_prices]
+  - link: B13
+    to: lca-transience
+    description: IAMC workbook written by itom-postprocessing (--formats iamc)
+    path: "Output/<scenario>_IAMC.xlsx (itom-postprocessing)"
+    format: xlsx, one sheet per variable (Production, Final Energy, Material Consumption, Carbon Capture, CO2 Emissions)
+    columns: [Model, Scenario, Region, Name, Unit, "<years>"]
+    variable_pattern: "Production | Industry | Iron and Steel | <Iron|Steel> | <route>"
+    existing_code:
+      repo: wupperinst/itom-postprocessing
+      path: postprocess_steel_model_output.py
+      config: config_steel.yaml
+
+open_questions:
+  - "Is ITOM's FinalDemand.csv the EU-MFA input dataset of that name or an exported flow? (EU-MFA also has data/*/input/datasets/FinalDemand.csv)"
+  - "Which run produces the MFA files: EU-MFA alone, or EU-MFA after the REMIND-MFA trade feedback? (D7.3: only a path changes)"
+  - "The OPEN-PROM sheets PricesIndustry/FinalEnergyBiomass and CarbonPrices.xlsx are not produced by postprom; who builds them from the .mif?"
+  - "Share the baseline ITOM input workbook and region-grouping workbook (needed to run and test the adapter)"

@@ -1,0 +1,100 @@
+model: eu-mfa
+display_name: EU-MFA (steel, with buildings and vehicles)
+source:
+  repo: wupperinst/transience-eu-mfa
+  branch: main
+  commit: 80aac47bfe491725684893379ad9b541770928a8
+  date: 2026-10-21
+platform_image: "MIC3-API integrations/eu_mfa (same commit; only the buildings mode is registered)"
+dependencies: []
+
+run:
+  baseline_candidates:
+    - {command: ["python", "eumfa_combined.py"], note: "buildings + vehicles bottom-up, then steel top-down on the residual; config/steel_combined_future.yml"}
+    - {command: ["python", "eumfa_steel.py", "-s", "baseline_fd-sv-gr"], note: "steel alone, final demand from start value and growth rate"}
+  working_directory: .
+  config_file: config/steel_<scenario>.yml
+  config_keys: [scenario, input_data_path, output_path, customization.model_driven, do_export.csv]
+  input_location: "input_data_path, default data/<scenario>_steel/input"
+  output_location: "output_path, default data/<scenario>_steel/output; flows under export/flows"
+  time: annual, 1946-2100 for steel
+
+inputs:
+  - link: B02
+    from: open-gem
+    description: Growth rate of steel final demand by sector and product (OPEN-GEM DEMAND/GDP growth, 1:1 for steel in the first test run)
+    path: data/baseline_fd-sv-gr_steel/input/datasets/growth_rate.csv
+    in_repo: true
+    format: csv
+    columns: [region, time, sector, intermediate, product, element, value]
+    dimensions: {region: [EU27+1], intermediate: [Steel Intermediary], element: [All]}
+    units: fraction per year
+    existing_code: "SharePoint folder D7.3/EU-MFA (not in a repository)"
+  - link: B02
+    from: open-gem
+    description: Start value of final demand (2023)
+    path: data/baseline_fd-sv-gr_steel/input/datasets/start_value.csv
+    in_repo: true
+    format: csv
+    columns: [region, time, sector, intermediate, product, element, value]
+    units: kt
+    note: Not from OPEN-GEM; listed because growth rates apply to it
+  - link: B02
+    from: open-gem
+    description: Building inflow and stock (commercial stock driven by OPEN-GEM services production, 30% elasticity; residential by population)
+    path: data/baseline_buildings/input/datasets/building_inflow.csv
+    in_repo: true
+    format: csv
+    columns: []
+    note: Column structure not yet checked
+  - link: B04
+    from: open-prom
+    description: New passenger car registrations by technology (OPEN-PROM capacity additions scaled to Eurostat 2024)
+    path: data/baseline_vehicles/input/datasets/vehicle_inflow.csv
+    in_repo: true
+    format: csv
+    columns: [Region, Vehicle type, Time, Value]
+    dimensions: {Region: "ISO-3 country codes", Vehicle type: "11 types, e.g. 'Conventional Hybrid – Diesel Oil' (en dash)"}
+    units: unknown (values around 0.02; probably million vehicles)
+    existing_code: unknown
+  - link: B06
+    from: remind-mfa
+    description: Imports and exports of new steel goods and products
+    paths:
+      - data/baseline_fd-sv-gr_steel/input/datasets/ImportNewGoods.csv
+      - data/baseline_fd-sv-gr_steel/input/datasets/ExportNewGoods.csv
+      - data/baseline_fd-sv-gr_steel/input/datasets/ImportNewProducts.csv
+      - data/baseline_fd-sv-gr_steel/input/datasets/ExportNewProducts.csv
+    path: data/baseline_fd-sv-gr_steel/input/datasets/ImportNewGoods.csv
+    in_repo: true
+    format: csv
+    columns: [region, time, sector, intermediate, product, element, value]
+    units: kt
+    method: D7.3 §3.1.7 (disaggregate REMIND-MFA goods and intermediate trade using EU-MFA demand shares)
+    existing_code: "Conversion script (Mathieu); SharePoint folder D7.3/EU-MFA"
+
+outputs:
+  - link: B05
+    to: remind-mfa
+    description: Demand, collected and lost end-of-life steel, available scrap
+    path: <output_path>/export/flows/*.csv
+    in_repo: false
+    format: csv per flow (flodym naming, e.g. steel_goods_market__end_use_stock.csv)
+  - link: B07
+    to: forecast-sites
+    description: Steel product market inflow and available scrap
+    files: [sysenv__steel_product_market.csv, waste_management__available_scrap_sysenv.csv]
+    path: <output_path>/export/flows/
+    in_repo: false
+  - link: B08
+    to: itom
+    files: [FinalDemand.csv, waste_management__available_scrap_sysenv.csv, steel_goods_manufacturing__sysenv.csv]
+    path: <output_path>/export/flows/
+    in_repo: false
+    note: see itom.yaml open question on FinalDemand.csv
+
+open_questions:
+  - "Which entry point is the baseline steel run: eumfa_combined.py or eumfa_steel.py -s baseline_fd-sv-gr?"
+  - "Population for buildings: OPEN-GEM (Excel) or scenario assumption (D7.3)?"
+  - "Units of vehicle_inflow.csv and where the OPEN-PROM scaling script lives"
+  - "Move the OPEN-GEM and REMIND-MFA conversion scripts from SharePoint into a repository"
