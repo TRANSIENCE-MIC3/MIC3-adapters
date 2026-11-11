@@ -14,8 +14,10 @@ If you have that folder, read `internal_docs/status.md` first; it is the running
   `model-repos/` (git-ignored; pinned commits, partial EU-MFA checkout, ~100 MB).
 - `tools/check_contracts.py` – checks that every path and column a contract relies on still exists.
 - `docs/baseline_links_steel.csv` – the 13 baseline links (B01–B13) the contracts refer to.
-- `upstream/<model>/` – verbatim copies of team linking scripts not yet published in the team's own repo
-  (with `PROVENANCE.md`); removed once the team publishes them.
+- `original_links/<model>/` – the modelling teams' original linking scripts, copied here until they are
+  published in the team's own repo (with `PROVENANCE.md`); removed once the team publishes them.
+- `run_configs/<model>/<version>/` – configuration files used for MIC3 model runs (e.g. FORECAST-Sites
+  `simulation_options` TOML files), copied unchanged from the run outputs; see `run_configs/README.md`.
 - `internal_docs/` – internal working notes, local only (git-ignored).
 
 ## Rules

@@ -17,7 +17,9 @@ run:
   config_keys: [start_year, interim_year, end_year, year_increment, id_scenario, region_ids, id_product_filter, input_mode, csv_input_directory, database_path, optimization_type, automatic_output_directory, fixed_output_directory]
   input_location: "csv_input_directory (CSV mode, imported into database_path) or database_path (SQLITE mode)"
   output_location: "fixed_output_directory (platform) / rolling or automatic output directory (default)"
-  baseline_settings: "steel dataset transience_steel; scenarios 1 and 2 ('Transience Steel 1/2'); 2025-2050 by 5 years, interim year 2040; optimization_type REGION_MULTI_PERIOD; 24 regions"
+  baseline_settings: "steel dataset transience_steel; scenarios 1 = low CO2, 2 = high CO2; 2025-2050 by 5 years, interim year 2040; optimization_type REGION_MULTI_PERIOD; 24 regions"
+  baseline_config: run_configs/forecast-sites/v1.3/simulation_options_steel_forward_2025_2050.toml (MIC3-adapters)
+  pre_run_step: "python input/run_steel_config.py <toml> --mandates (builds the production mandates; development version, not yet public)"
 
 system_boundaries:
   scope: "Direct (Scope 1) plant emissions only"
@@ -28,7 +30,7 @@ system_boundaries:
 
 lookup_tables:
   - {path: resources/input/por/id_energy_carrier.csv, in_repo: true, format: csv, columns: [id, name], note: "carrier ids are dataset-specific: in transience_steel 1 Electricity, 3 Hard coal, 4 Coke, 5 Lignite, 6 Natural Gas, 12 Biomass solid; in por 4 Natural gas, 7 Biomass, 15 H2"}
-  - {path: resources/input/por/id_region.csv, in_repo: true, format: csv, columns: [id, name], note: "country names; ISO3 -> id mapping in upstream/forecast-sites/openprom.py (EU27+UK)"}
+  - {path: resources/input/por/id_region.csv, in_repo: true, format: csv, columns: [id, name], note: "country names; ISO3 -> id mapping in original_links/forecast-sites/openprom.py (EU27+UK)"}
   - {path: resources/input/por/id_scenario.csv, in_repo: true, format: csv, columns: [id, name]}
   - {path: resources/input/por/id_product.csv, in_repo: true, format: csv, columns: [id, name], note: "steel dataset (version 1.2 onwards): 121 raw steel hot (primary, BOF), 122 scrap, 123 raw steel hot secondary (EAF); in versions 1 and 1.1, 122 was secondary steel and 123 did not exist"}
 
@@ -47,8 +49,8 @@ inputs:
     source_units: "kt, region EU27+1, element All; only growth rates relative to 2025 are used"
     existing_code:
       repo: TRANSIENCE-MIC3/MIC3-adapters
-      path: upstream/forecast-sites/couple_eumfa_production_targets.py
-      reader: upstream/forecast-sites/eumfa.py
+      path: original_links/forecast-sites/couple_eumfa_production_targets.py
+      reader: original_links/forecast-sites/eumfa.py
       entry: "couple(EumfaCouplingConfig(target_dir, year_periods, tag))"
       missing_dependency: "couple_remind_production_targets.py (provides _capacity_weights)"
       also_writes: "steel_country_route_mapping.csv and coupling_validation_<tag>.csv in the statistics folder"
@@ -64,8 +66,8 @@ inputs:
     units: EUR/GJ
     existing_code:
       repo: TRANSIENCE-MIC3/MIC3-adapters
-      path: upstream/forecast-sites/couple_openprom_prices.py
-      reader: upstream/forecast-sites/openprom.py
+      path: original_links/forecast-sites/couple_openprom_prices.py
+      reader: original_links/forecast-sites/openprom.py
       entry: "apply_openprom_prices(OpenPromPriceCouplingConfig(...))"
       note: "default invocation is ammonia/methanol (sector Chemicals); steel settings not yet received"
   - link: B10
@@ -79,7 +81,7 @@ inputs:
     units: GJ/yr
     existing_code:
       repo: TRANSIENCE-MIC3/MIC3-adapters
-      path: upstream/forecast-sites/couple_openprom_prices.py
+      path: original_links/forecast-sites/couple_openprom_prices.py
   - link: B10
     from: open-prom
     description: CO2 price (from OPEN-PROM for now)
@@ -111,10 +113,11 @@ outputs:
     note: "Also written: steel_final_energy.xlsx, steel_investments.xlsx, steel_production_cost.xlsx. The code that writes these files is not in the public repository"
 
 open_questions:
-  - "Publish the steel coupling scripts (input/transience_coupling) and the EU steel dataset in the public repository; until then the scripts are kept in upstream/forecast-sites"
+  - "Publish the steel coupling scripts (input/transience_coupling) and the EU steel dataset in the public repository; until then the scripts are kept in original_links/forecast-sites"
   - "Provide couple_remind_production_targets.py and the World Steel statistics file (with licence)"
   - "Norway, Switzerland, Latvia: keep existing mandates (modellers' description) or capacity x average utilisation of the other countries (script, D7.3)?"
   - "Steel settings for couple_openprom_prices.py (sector, carrier ids, regions, scenario) and the carbon-price coupling"
   - "Price method: direct conversion to EUR2015 (script) or relative change vs base year (D7.3 Table 20); target currency year"
   - "Code that writes steel_production.xlsx and the other steel_*.xlsx exports"
+  - "Publish input/run_steel_config.py (pre-run step that builds the mandates)"
   - "Source and licence of the plant-level data (companies, sites, coordinates)"

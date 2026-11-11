@@ -32,8 +32,8 @@ inputs:
     units: fraction per year
     existing_code:
       repo: TRANSIENCE-MIC3/MIC3-adapters
-      path: upstream/eu-mfa/opengem_to_eumfa.R
-      config: upstream/eu-mfa/config.yml
+      path: original_links/eu-mfa/opengem_to_eumfa.R
+      config: original_links/eu-mfa/config.yml
       reads: "OPEN-GEM report sheets MACRO_BASE and SECTOR_BASE exported to ';'-separated CSV; growth_rate template; start_value.csv; historical final demand"
       also_writes: "FinalDemand.csv (history before the start year + start value compounded with the growth rates), used for fd-driven runs and by the ITOM interface"
       note: "runs only inside RStudio (setwd via rstudioapi); the OPEN-GEM CSV export is manual"
@@ -81,8 +81,8 @@ inputs:
     mapping: "REMIND EUR -> EU27+1; Construction -> Construction; Transport -> Automotive, Other Transport; Machinery -> Mechanical Engineering; Products -> Miscellaneous, Metalware, Domestic appliances"
     existing_code:
       repo: TRANSIENCE-MIC3/MIC3-adapters
-      path: upstream/eu-mfa/remindmfa_to_eumfa.R
-      config: upstream/eu-mfa/config.yml
+      path: original_links/eu-mfa/remindmfa_to_eumfa.R
+      config: original_links/eu-mfa/config.yml
       note: "'fixed' version, runnable with Rscript"
       reads: "REMIND-MFA csv/flows: good_market__exports.csv, imports__good_market.csv, ip_market__exports.csv, imports__ip_market.csv"
 
@@ -113,5 +113,5 @@ open_questions:
   - "Which run is the MIC3 baseline: top-down BASE_fd-sv-gr / BASE_fd, or the combined run?"
   - "Population for buildings: OPEN-GEM or scenario assumption?"
   - "Units of vehicle_inflow.csv and the OPEN-PROM scaling script"
-  - "Publish opengem_to_eumfa.R, remindmfa_to_eumfa.R and config.yml in the EU-MFA repository (copies kept in upstream/eu-mfa until then)"
+  - "Publish opengem_to_eumfa.R, remindmfa_to_eumfa.R and config.yml in the EU-MFA repository (copies kept in original_links/eu-mfa until then)"
   - "Is the 'fixed' remindmfa_to_eumfa.R the version to use?"
