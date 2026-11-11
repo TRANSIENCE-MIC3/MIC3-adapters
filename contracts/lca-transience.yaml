@@ -1,0 +1,60 @@
+model: lca-transience
+display_name: LCA-TRANSIENCE
+source:
+  repo: tomterlouw/lca_transience
+  branch: main
+  commit: 4bfea0bd6c08d469f95b6b662d05c61e2943a12b
+  date: 2026-11-07
+dependencies:
+  - "ecoinvent licence (model_status sheet), premise and Brightway"
+
+run:
+  steps: [1_export_packages.ipynb, 2_calc_impacts.ipynb]
+  note: "Runs as Jupyter notebooks; there is no documented non-interactive command (D7.2 §5 checklist)"
+  config_files: [configuration_file/config_forecast_steel.yaml, configuration_file/config_itom.yaml, configuration_file/config_open_prom.yaml]
+  datapackages: [datapackages/datapackage_forecast_steel.json, datapackages/datapackage_itom.json, datapackages/datapackage_open_prom.json]
+
+inputs:
+  - link: B12
+    from: forecast-sites
+    description: Steel production by route, converted to premise IAMC
+    path: scenario_data/scenario_data_forecast_steel_iamc.csv
+    in_repo: true
+    format: csv
+    columns: []
+    variables: ["Production|Steel|BF/BOF", "Production|Steel|Secondary steel", "Production|Steel|DRI_NG", "Production|Steel|BF/BOF_CCS", "Production|Steel|DRI_NG_CCS", "Production|Steel|Secondary steel_CCS"]
+    units: Mt/yr
+    existing_code:
+      repo: tomterlouw/lca_transience
+      path: 0_convert_FORECAST_steel_to_IAMC.py
+      cli: "--input <FORECAST steel production xlsx> --output <csv>"
+      mapping: configuration_file/forecast_steel_routes.yaml
+  - link: B13
+    from: itom
+    description: Steel production by route, converted to premise IAMC
+    path: scenario_data/scenario_data_itom.csv
+    in_repo: false
+    variables: ["Production|Steel|BF/BOF", "Production|Steel|Secondary steel", "Production|Steel|DRI_NG", "Production|Steel|DRI_H2", "Production|Steel|DRI_NG_H2", "Production|Steel|DRI_unresolved", "Production|Steel|HBI_NG", "Production|Steel|HBI_H2", "Production|Steel|HBI_NG_H2", "Production|Steel|HBI_unresolved"]
+    existing_code:
+      repo: tomterlouw/lca_transience
+      path: 0_convert_ITOM_steel_to_IAMC.py
+      cli: "--input <ITOM IAMC workbook from itom-postprocessing> --output <csv>"
+  - link: B11
+    from: open-prom
+    description: Hydrogen and electricity production mixes
+    path: scenario_data/scenario_data_open_prom.csv
+    in_repo: false
+    existing_code: "Notebook 1 currently builds it from scenario_data_open_prom_init.csv; George will share the adapter (C11)"
+
+files_in_repo:
+  - {path: 0_convert_FORECAST_steel_to_IAMC.py, in_repo: true}
+  - {path: 0_convert_ITOM_steel_to_IAMC.py, in_repo: true}
+  - {path: configuration_file/forecast_steel_routes.yaml, in_repo: true}
+  - {path: configuration_file/config_itom.yaml, in_repo: true}
+  - {path: configuration_file/config_open_prom.yaml, in_repo: true}
+
+outputs: []   # end of the baseline chain
+
+open_questions:
+  - "A non-interactive entry point (script or papermill call) for the notebooks"
+  - "Confirm the ITOM converter reads the itom-postprocessing IAMC workbook (default input is 'Copy of ITOM_Steel_Test-scenario_IAMC_v2.xlsx')"

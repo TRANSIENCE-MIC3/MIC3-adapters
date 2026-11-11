@@ -1,0 +1,14 @@
+name,repo,branch,commit,date,sparse_paths
+transience-eu-mfa,wupperinst/transience-eu-mfa,main,80aac47bfe491725684893379ad9b541770928a8,2026-10-21,/*;!/*/;/src/;/config/;/data/baseline_fd-sv-gr_steel/;/data/baseline_fd_steel/;/data/baseline_buildings/;/data/baseline_combined/;/data/baseline_vehicles/input/datasets/vehicle_inflow.csv
+remind-mfa,pik-piam/remind-mfa,transience,5bdc1beb8a46bc1dac6875e6300db2b939bf37d7,2026-11-09,
+forecast-sites,fraunhofer-isi/forecast-sites,main,086465639d71b2abab26162b5f4869065d73f857,2026-11-09,
+itom,wupperinst/itom,main,40f08ba52a2189f2fa62bd9f252090e1acbb9564,2026-01-13,
+lca_transience,tomterlouw/lca_transience,main,4bfea0bd6c08d469f95b6b662d05c61e2943a12b,2026-11-07,
+OPEN-GEM,e3modelling/OPEN-GEM,main,2aeeec3bb5702cf30f68da302338f5aae135dfea,2026-10-15,
+OPEN-PROM,e3modelling/OPEN-PROM,main,ab006244a693fc4289f3479bfc0c9aa126d3de91,2026-10-12,
+TRANSIENCE_MIC3-ITOM_Interface,wupperinst/TRANSIENCE_MIC3-ITOM_Interface,master,94c2ff7693f44463c0b49dfdf611b9a9774ec454,2026-11-05,
+itom-postprocessing,wupperinst/itom-postprocessing,main,528a0c01e7db6c76b11c3719bfc50e88e09dcf3d,2026-10-31,
+mrprom,e3modelling/mrprom,main,9092a474cfe42692aaf41d3e6b26e74ccdedf539,2026-11-04,
+postprom,e3modelling/postprom,main,b585e1c1efed13d9b9d6da8d25bd125a8e86d7e4,2026-11-06,
+MIC3-API,TRANSIENCE-MIC3/MIC3-API,master,b807d459f76ec007530c49366511105a93909355,2026-11-10,
+MIC3-WEB,TRANSIENCE-MIC3/MIC3-WEB,main,89a94c9a5661bed666fea04958ce89d93d834686,2026-09-24,

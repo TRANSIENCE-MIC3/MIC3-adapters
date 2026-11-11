@@ -1,0 +1,45 @@
+model: open-gem
+display_name: OPEN-GEM
+source:
+  repo: e3modelling/OPEN-GEM
+  branch: main
+  commit: 2aeeec3bb5702cf30f68da302338f5aae135dfea
+  date: 2026-10-15
+dependencies:
+  - "GAMS (licence acquired by HOL)"
+  - "GTAP database GDX files (licensed; README)"
+  - "GDXXRW for the Excel report, which runs on Windows only; report paths use backslashes"
+
+run:
+  command: ["bash", "run_OpenGEM.sh"]
+  working_directory: .
+  model_file: MODEL/OPEN_GEM.gms
+  config_keys: []        # scenario selection mechanism to be documented
+
+inputs: []               # baseline: no inputs from other MIC3 models (assumptions database out of scope, C3)
+
+outputs:
+  - link: [B02, B03]
+    to: [eu-mfa, remind-mfa]
+    description: Macro and sectoral report
+    path: "%path%/OPEN_GEM_REPORT.xlsx (sheets MACRO_<scen>, SECTOR_<scen>) and OPEN_GEM_REPORT.gdx (REPORT_MACRO, REPORT_SECTOR)"
+    in_repo: false
+    variables: [DEMAND, PROD, RHCDTOTV, GDP, IMPORTS, EXPORTS]
+    units: b$2017
+    existing_code: {repo: e3modelling/OPEN-GEM, path: MODEL/08_Report.gms}
+  - link: B01
+    to: open-prom
+    description: Full results GDX read by mrprom
+    path: OPEN_GEM_v20261016.gdx (madrat source folder)
+    in_repo: false
+    variables: [A_XD, P_PD, A_HC, P_HC, P_PWE, A_YVTWR, A_EXPO]
+    existing_code: {repo: e3modelling/mrprom, path: R/readOPEN_GEM.R}
+
+files_in_repo:
+  - {path: run_OpenGEM.sh, in_repo: true}
+  - {path: MODEL/08_Report.gms, in_repo: true}
+
+open_questions:
+  - "How is the scenario selected in a batch run, and which output files does each run produce?"
+  - "Can the report step run on Linux (gdxdump/GAMS Connect instead of GDXXRW)?"
+  - "Which GDX is the baseline exchange file: OPEN_GEM_REPORT.gdx or the full results GDX?"
