@@ -55,7 +55,7 @@ outputs:
     columns: "Time, Region, Good, value (goods); Time, Region, value (intermediate products)"
     units: t
     regions: "h12; EU-MFA uses region EUR"
-    existing_code: "remindmfa_to_eumfa.R (WI; received, not yet public) converts these into EU-MFA Import/ExportNewGoods/Products.csv"
+    existing_code: "upstream/eu-mfa/remindmfa_to_eumfa.R (MIC3-adapters) converts these into EU-MFA Import/ExportNewGoods/Products.csv"
 
 open_questions:
   - "Single-run command and config for the MIC3 baseline (rather than run_transience_all.py)"

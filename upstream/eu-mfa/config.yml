@@ -1,0 +1,129 @@
+# © 2026 Wuppertal Institut für Klima, Umwelt, Energie gGmbH
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# OPEN-GEM Configuration
+opengem:
+  scenario: BASE
+  extract_from_macro:
+    - variable: GDP
+      region: EU27
+      years: all
+  extract_from_sector:
+    - variable: PROD
+      sector: AGR01
+      region: EU27
+      years: all
+    - variable: DEMAND
+      sector: IND31
+      region: EU27
+      years: all
+    - variable: DEMAND
+      sector: IND33
+      region: EU27
+      years: all
+    - variable: DEMAND
+      sector: IND34
+      region: EU27
+      years: all
+    - variable: DEMAND
+      sector: IND35
+      region: EU27
+      years: all
+    - variable: RHCDTOTV
+      sector: SRV01
+      region: EU27
+      years: all
+
+# EU-MFA Configuration
+eumfa:
+  scenario: BASE
+  type: fd-sv-gr
+  start_year: 2023
+
+# CORRESPONDENCE OPEN-GEM vs. EU-MFA Configuration
+correspondence_opengem_eumfa:
+  - model: plastics
+    region_correspondence:
+      - eumfa_regions:
+          - EU27+3
+          - Germany
+          - East
+          - West
+          - North
+          - South
+        opengem_region: EU27
+    sector_correspondence:
+      - eumfa_sector: Agriculture
+        opengem_sector: AGR01
+        opengem_variable: PROD
+      - eumfa_sector: Automotive
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+      - eumfa_sector: Electrical & Electronics
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+      - eumfa_sector: Household packaging
+        opengem_sector: IND34
+        opengem_variable: HC
+      - eumfa_sector: Buildings & Construction
+        opengem_sector: IND35
+        opengem_variable: DEMAND
+      - eumfa_sector: Household, Leisure, Sports
+        opengem_sector: SRV01
+        opengem_variable: HC
+      - eumfa_sector: Commercial and industrial packaging
+        opengem_sector: null
+        opengem_variable: GDP
+      - eumfa_sector: Others
+        opengem_sector: null
+        opengem_variable: GDP
+
+  - model: steel
+    region_correspondence:
+      - eumfa_regions: EU27+1
+        opengem_region: EU27
+    sector_correspondence:
+      - eumfa_sector: Automotive
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+      - eumfa_sector: Construction
+        opengem_sector: IND35
+        opengem_variable: DEMAND
+      - eumfa_sector: Domestic appliances
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+      - eumfa_sector: Metalware
+        opengem_sector: IND31
+        opengem_variable: DEMAND
+      - eumfa_sector: Mechanical Engineering
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+      - eumfa_sector: Miscellaneous
+        opengem_sector: null
+        opengem_variable: GDP
+      - eumfa_sector: Other Transport
+        opengem_sector: IND33
+        opengem_variable: DEMAND
+
+# CORRESPONDENCE REMIND-MFA vs. EU-MFA Configuration
+correspondence_remindmfa_eumfa:
+  - model: steel
+    region_correspondence:
+      - eumfa_regions: EU27+1
+        remindmfa_region: EUR
+    sector_correspondence:
+      - eumfa_sector: Construction
+        remindmfa_good: Construction
+      - eumfa_sector: Automotive
+        remindmfa_good: Transport
+      - eumfa_sector: Other Transport
+        remindmfa_good: Transport
+      - eumfa_sector: Mechanical Engineering
+        remindmfa_good: Machinery
+      - eumfa_sector: Miscellaneous
+        remindmfa_good: Products
+      - eumfa_sector: Metalware
+        remindmfa_sector: Products
+      - eumfa_sector: Domestic appliances
+        remindmfa_good: Products
