@@ -2,9 +2,9 @@
 
 Adapters and I/O contracts that link the seven TRANSIENCE models into MIC3 (Model for European Industry
 Circularity and Climate Change Mitigation), plus the tools that keep them in step with the model repositories.
-Internal working notes (handoff notes, findings workbook) live in `.internal_docs/`, which is git-ignored.
-If you have that folder, read the handoff notes there first: they record the scope, the decisions taken so
-far and the open questions.
+Internal working notes live in `internal_docs/`, which is git-ignored: `internal_docs/status.md` (scope,
+decisions taken so far, open questions) and `internal_docs/MIC3_links_D7.3_vs_Excel_findings.xlsx` (findings).
+If you have that folder, read `internal_docs/status.md` first; it is the running record of decisions and open items, so update it whenever something is settled.
 
 ## Layout
 
@@ -14,7 +14,11 @@ far and the open questions.
   `model-repos/` (git-ignored; pinned commits, partial EU-MFA checkout, ~100 MB).
 - `tools/check_contracts.py` – checks that every path and column a contract relies on still exists.
 - `docs/baseline_links_steel.csv` – the 13 baseline links (B01–B13) the contracts refer to.
-- `.internal_docs/` – internal working notes, local only (git-ignored).
+- `original_links/<model>/` – the modelling teams' original linking scripts, copied here until they are
+  published in the team's own repo (with `PROVENANCE.md`); removed once the team publishes them.
+- `run_configs/<model>/<version>/` – configuration files used for MIC3 model runs (e.g. FORECAST-Sites
+  `simulation_options` TOML files), copied unchanged from the run outputs; see `run_configs/README.md`.
+- `internal_docs/` – internal working notes, local only (git-ignored).
 
 ## Rules
 
@@ -26,13 +30,14 @@ far and the open questions.
   `remind-mfa/scripts/map_*.py`, LCA `0_convert_*` converters). Where a script hardcodes paths, stage files
   into a temporary copy of its folder rather than editing it.
 - **Branches:** read `main`/`master` of every repo, except `pik-piam/remind-mfa`, which uses `transience`.
-- **Scope (until changed in the handoff notes):** baseline only (no loops); iron & steel only for
+- **Scope (until changed in `internal_docs/status.md`):** baseline only (no loops); iron & steel only for
   multi-sector models; scenario assumptions database out of scope; carbon price from OPEN-PROM;
   REMIND-MFA regions per D7.3 (EU = EU27+1); FORECAST-Sites gets production from EU-MFA.
 - **Flag ambiguities, don't guess.** Surface design decisions before writing code and confirm them one by
   one; verify structural assumptions against the actual files before reporting them.
 - When a contract changes, update the commit pin, rerun the checker, and record any new finding in the
-  local findings workbook. Keep finding IDs (Fxx) out of committed files.
+  local findings workbook. Keep internal IDs (findings Fxx, clarifications Cxx) and personal names out of
+  committed files; describe the decision itself instead.
 
 ## Commands
 

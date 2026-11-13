@@ -28,8 +28,9 @@ inputs:
     in_repo: false
     existing_code:
       repo: e3modelling/mrprom
-      chain: [R/readOPEN_GEM.R, R/convertOPEN_GEM.R, R/calcIACTV_OP_GEM.R]
-      note: "Excel link_status: 'full OPEN-PROM (lines 92-103 only)'"
+      chain: [R/readOPEN_GEM.R, R/convertOPEN_GEM.R, R/calcIACTV_OP_GEM.R, R/fullOPEN-PROM.R]
+      mapping_files: [inst/extdata/regional/country_mapping_OPEN_GEM_249_to_28.csv, inst/extdata/regional/regionmappingOPEN_GEM.csv, inst/extdata/sectoral/OPEN_PROM_GEM_mapping.csv]
+      note: "fullOPEN-PROM.R lines 92-103 compute period-to-period growth ratios of calcOutput('IACTV_OP_GEM'); the block through about line 125 writes iActvOPGEM.csvr. It runs inside the full input generation"
 
 files_in_repo:
   - {path: main.gms, in_repo: true}
@@ -50,14 +51,24 @@ outputs:
       - "Capacity Additions|Passenger Cars|<technology>"
     regions: ISO-3 country codes
     existing_code: {repo: e3modelling/postprom, paths: [R/convertGDXtoMIF.R, R/reportPrice.R, R/reportPriceCarbon.R, R/reportVehicles.R]}
-  - link: B09
-    to: itom
-    description: Derived workbooks the ITOM interface reads
-    files: ["OPEN-PROM-Baseline-<date>.xlsx (PricesIndustry, FinalEnergyBiomass)", "CarbonPrices.xlsx (CarbonPrices, Region EU)"]
+  - link: [B04, B09, B10]
+    to: [eu-mfa, itom, forecast-sites]
+    description: Baseline workbook produced by the OPEN-PROM team (first MIC3 base run)
+    files: ["OPEN-PROM-Baseline-<date>.xlsx", "CarbonPrices.xlsx"]
     in_repo: false
-    note: Not produced by postprom; origin to confirm
+    sheets:
+      PassengerCars: "Capacity Additions|Passenger Cars|<technology>, million vehicles"
+      PricesIndustry: "Price|Final Energy|Industry|<sector>|<carrier>, k$2015/toe"
+      FinalEnergyBiomass: "Final Energy|Industry|<sector>|Biomass and Waste, Mtoe"
+      AllOutputs: "full report in IAMC wide format (about 63,000 rows); the other sheets are subsets of it"
+      CarbonPrices: "separate file; Price|Carbon, US$2015/tn CO2, 13 regions incl. EU and GBR, 2010-2050"
+    columns: [Model, Scenario, Region, Variable, Unit, "<years>"]
+    dimensions: {Model: ["OPEN-PROM 2.2"], Scenario: [NPI], Region: "EU countries ISO-3, non-EU REMIND-style macro-regions"}
+    note: "Price|Carbon is reported per country and is identical for all EU27 countries; the CarbonPrices EU row equals it"
 
 open_questions:
   - "Which task_id and flags define the MIC3 baseline (with OPENGEM=on)?"
-  - "Who produces PricesIndustry/FinalEnergyBiomass and CarbonPrices.xlsx, and should the ITOM adapter read the .mif instead?"
+  - "Use AllOutputs (or the postprom .mif) as the single exchange file for prices, biomass, vehicles and the EU carbon price?"
+  - "Move the iActvOPGEM.csvr block into its own function, so it can run without the full input generation?"
+  - "Baseline scenario name (NPI) and flags (OPENGEM=on)"
   - "Can real-data input generation run in a container, or is a pre-generated input folder shipped?"

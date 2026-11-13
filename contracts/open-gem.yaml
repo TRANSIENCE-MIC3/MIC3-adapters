@@ -16,15 +16,17 @@ run:
   model_file: MODEL/OPEN_GEM.gms
   config_keys: []        # scenario selection mechanism to be documented
 
-inputs: []               # baseline: no inputs from other MIC3 models (assumptions database out of scope, C3)
+inputs: []               # baseline: no inputs from other MIC3 models (scenario assumptions database out of scope for now)
 
 outputs:
   - link: [B02, B03]
     to: [eu-mfa, remind-mfa]
-    description: Macro and sectoral report
+    description: "Macro and sectoral report (first base run: OPEN_GEM_REPORT_v20261016.xlsx with sheets INFO, MACRO_BASE, SECTOR_BASE, Country_Figures, Sector_Figures). For EU-MFA, MACRO_BASE and SECTOR_BASE were reshaped and exported to ';'-separated CSV by hand"
     path: "%path%/OPEN_GEM_REPORT.xlsx (sheets MACRO_<scen>, SECTOR_<scen>) and OPEN_GEM_REPORT.gdx (REPORT_MACRO, REPORT_SECTOR)"
+    csv_columns_used: [variable, sector, region, "2017", "2020", "2025", "...", "2050"]
+    regions_used: [EU27]
     in_repo: false
-    variables: [DEMAND, PROD, RHCDTOTV, GDP, IMPORTS, EXPORTS]
+    variables: [DEMAND, PROD, RHCDTOTV, HC, GDP, IMPORTS, EXPORTS]
     units: b$2017
     existing_code: {repo: e3modelling/OPEN-GEM, path: MODEL/08_Report.gms}
   - link: B01
@@ -41,5 +43,5 @@ files_in_repo:
 
 open_questions:
   - "How is the scenario selected in a batch run, and which output files does each run produce?"
-  - "Can the report step run on Linux (gdxdump/GAMS Connect instead of GDXXRW)?"
+  - "Can the report step write MACRO_BASE/SECTOR_BASE as CSV directly and run on Linux (GDXXRW needs Windows)?"
   - "Which GDX is the baseline exchange file: OPEN_GEM_REPORT.gdx or the full results GDX?"

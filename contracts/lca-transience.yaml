@@ -29,6 +29,8 @@ inputs:
       path: 0_convert_FORECAST_steel_to_IAMC.py
       cli: "--input <FORECAST steel production xlsx> --output <csv>"
       mapping: configuration_file/forecast_steel_routes.yaml
+    source_file: "FORECAST-Sites steel_production.xlsx (columns model, scenario, region ISO-2, variable '<route>|Production', unit Mt/year, 2025-2050)"
+    note: "FORECAST-Sites accounts for direct (Scope 1) plant emissions only; purchased ore, pellets, scrap and energy carriers carry no upstream burdens there, so the LCA mapping must add them"
   - link: B13
     from: itom
     description: Steel production by route, converted to premise IAMC
@@ -44,7 +46,7 @@ inputs:
     description: Hydrogen and electricity production mixes
     path: scenario_data/scenario_data_open_prom.csv
     in_repo: false
-    existing_code: "Notebook 1 currently builds it from scenario_data_open_prom_init.csv; George will share the adapter (C11)"
+    existing_code: "Notebook 1 currently builds it from scenario_data_open_prom_init.csv; an OPEN-PROM -> LCA adapter exists and is to be added to this repository"
 
 files_in_repo:
   - {path: 0_convert_FORECAST_steel_to_IAMC.py, in_repo: true}

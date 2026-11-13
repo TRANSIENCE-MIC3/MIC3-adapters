@@ -10,7 +10,7 @@ related_repos:
   - {repo: wupperinst/itom-postprocessing, branch: main, commit: 528a0c01e7db6c76b11c3719bfc50e88e09dcf3d, role: "ITOM output CSVs -> IAMC workbook"}
 dependencies:
   - "Solver: configs/default_config.yaml uses gurobi (commercial licence); glpk is the open alternative"
-  - "Input workbook ITOM_Steel_TRANSIENCE_baseline0_input.xlsx is not in any public repo"
+  - "Input workbook (MIC3 baseline: ITOM_Steel_TRANSIENCE_Mic3-baseline-run_input.xlsx) is not in any public repo"
   - "Postprocessing needs Model_data/ITOM-Steel_region-grouping.xlsx, not in the repo"
 
 run:
@@ -92,12 +92,12 @@ inputs:
       functions: [update_emissions_penalty]
 
 source_files_expected_by_existing_code:
-  - {link: B08, file: FinalDemand.csv, columns: [region, time, sector, product, element, value], region: EU27+1, units: kt, filter: "element == All"}
+  - {link: B08, file: FinalDemand.csv, columns: [region, time, sector, product, element, value], region: EU27+1, units: kt, filter: "element == All", note: "EU-MFA input dataset written by the OPEN-GEM -> EU-MFA script (history + projected final demand), not an EU-MFA output"}
   - {link: B08, file: waste_management__available_scrap_sysenv.csv, columns: [region, time, waste_category, element, value], elements: [All, Cu], units: kt}
   - {link: B08, file: steel_goods_manufacturing__sysenv.csv, columns: [region, time, element, value], units: kt}
   - {link: B08, file: mfa_itom_steel_product_mapping.xlsx, sheet: products_mfa_itom, columns: [sectors, products, Product_EST], in_repo: true, repo: wupperinst/TRANSIENCE_MIC3-ITOM_Interface, path: ITOM_demand_interface/mfa_itom_steel_product_mapping.xlsx}
-  - {link: B09, file: "OPEN-PROM-Baseline-<date>.xlsx", sheets: {PricesIndustry: "IAMC wide, Region ISO-3, Price|Final Energy|Industry|Iron and Steel|<carrier>, k$2015/toe", FinalEnergyBiomass: "Final Energy|Industry|Iron and Steel|Biomass and Waste, Mtoe"}}
-  - {link: B09, file: CarbonPrices.xlsx, sheet: CarbonPrices, filter: "Region == EU", years_required: [2025]}
+  - {link: B09, file: "OPEN-PROM-Baseline-<date>.xlsx", sheets: {PricesIndustry: "IAMC wide, Region ISO-3, Price|Final Energy|Industry|Iron and Steel|<carrier>, k$2015/toe", FinalEnergyBiomass: "Final Energy|Industry|Iron and Steel|Biomass and Waste, Mtoe"}, note: "workbook produced by the OPEN-PROM team; both sheets are subsets of its AllOutputs sheet"}
+  - {link: B09, file: CarbonPrices.xlsx, sheet: CarbonPrices, filter: "Region == EU", years_required: [2025], note: "OPEN-PROM output (US$2015/t CO2, 2010-2050); the EU row equals Price|Carbon of each EU27 country in OPEN-PROM AllOutputs, so it can be derived from the OPEN-PROM report"}
 
 outputs:
   - link: B13
@@ -119,7 +119,7 @@ outputs:
       config: config_steel.yaml
 
 open_questions:
-  - "Is ITOM's FinalDemand.csv the EU-MFA input dataset of that name or an exported flow? (EU-MFA also has data/*/input/datasets/FinalDemand.csv)"
-  - "Which run produces the MFA files: EU-MFA alone, or EU-MFA after the REMIND-MFA trade feedback? (D7.3: only a path changes)"
-  - "The OPEN-PROM sheets PricesIndustry/FinalEnergyBiomass and CarbonPrices.xlsx are not produced by postprom; who builds them from the .mif?"
-  - "Share the baseline ITOM input workbook and region-grouping workbook (needed to run and test the adapter)"
+  - "Which run produces the MFA files: EU-MFA alone, or EU-MFA after the REMIND-MFA trade feedback? (first base run: combined EU-MFA run with REMIND-MFA trade)"
+  - "Read prices, biomass and the EU carbon price from OPEN-PROM AllOutputs instead of the derived workbooks?"
+  - "Region-grouping workbook for itom-postprocessing; solver for platform runs (Gurobi licence or GLPK)"
+  - "Publishing permission for the baseline input workbook (received; kept local)"

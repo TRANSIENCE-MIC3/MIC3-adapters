@@ -29,6 +29,7 @@ outputs:                    # native outputs read by an export step
 open_questions: [...]
 ```
 
-`tools/clone_repos.sh` rebuilds the set of clones from `repo_pins.csv`. `tools/check_contracts.py` reads every contract and checks, against a local clone at the pinned (or latest)
+`tools/clone_repos.sh` rebuilds the set of clones from `repo_pins.csv` into `model-repos/` (git-ignored).
+`tools/check_contracts.py` reads every contract and checks, against those clones at the pinned (or latest)
 commit, that each `in_repo: true` path exists and, for CSV files and xlsx sheets, that the listed columns are
 present. Running it against the latest commits detects changes to a model's I/O that would break an adapter.

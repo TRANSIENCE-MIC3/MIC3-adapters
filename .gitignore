@@ -22,4 +22,7 @@ Icon?
 *.code-workspace
 
 # Internal working notes, kept locally only
-/.internal_docs/
+/internal_docs/
+
+# Model inputs/outputs copied from the consortium shared folder, kept locally only
+/internal_data/
